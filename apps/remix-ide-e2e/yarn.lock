@@ -45,8 +45,10 @@
   dependencies:
     array.prototype.flatmap "^1.2.4"
 
-"@remix-project/remixd@../../dist/libs/remixd":
-  version "0.6.30"
+"@remix-project/remixd@0.6.31":
+  version "0.6.31"
+  resolved "https://registry.yarnpkg.com/@remix-project/remixd/-/remixd-0.6.31.tgz#62f8d30dcb682f9df35828b6e956a249420f2417"
+  integrity sha512-+74z/cxzkTAS/M1opP4P26dUG31xzQoGSTTJ5tYdwmLjwvq8IXJ5NjkiC/cpEa2N+GCXmBkrSqsuFIasfGluJA==
   dependencies:
     "@remixproject/plugin" "0.3.33"
     "@remixproject/plugin-api" "0.3.33"
