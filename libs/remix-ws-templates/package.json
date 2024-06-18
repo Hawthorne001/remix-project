@@ -21,7 +21,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.0",
     "@openzeppelin/wizard": "^0.4.0",
-    "ethers": "^5.4.2",
+    "ethers": "^6.0.0",
     "web3": "^4.1.1"
   },
   "gitHead": "4f5c2cb88bc38099f71c5407265a23ab3bb7508e"
