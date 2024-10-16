@@ -16,8 +16,6 @@ const profile = {
   events: ['toggleContent', 'showContent']
 }
 
-const toMaximize = ['LearnEth']
-
 export class VerticalIcons extends Plugin {
   events: EventEmitter
   htmlElement: HTMLDivElement
@@ -73,7 +71,26 @@ export class VerticalIcons extends Plugin {
       Object.keys(this.icons).map((o) => {
         this.icons[o].active = false
       })
-      this.icons[name].active = true
+
+      if (this.icons[name]) {
+        this.icons[name].active = true
+      }
+      this.renderComponent()
+    })
+
+    this.on('pinnedPanel', 'pinnedPlugin', (profile) => {
+      Object.keys(this.icons).map((icon) => {
+        if (this.icons[icon].profile.name === profile.name) {
+          this.icons[icon].pinned = true
+        } else {
+          this.icons[icon].pinned = false
+        }
+      })
+      this.renderComponent()
+    })
+
+    this.on('pinnedPanel', 'unPinnedPlugin', (profile) => {
+      if (this.icons[profile.name]) this.icons[profile.name].pinned = false
       this.renderComponent()
     })
   }
@@ -84,6 +101,7 @@ export class VerticalIcons extends Plugin {
     this.icons[profile.name] = {
       profile: profile,
       active: false,
+      pinned: false,
       canbeDeactivated: await this.call('manager', 'canDeactivate', this.profile, profile),
       timestamp: Date.now()
     }
@@ -108,11 +126,6 @@ export class VerticalIcons extends Plugin {
     // TODO: Only keep `this.emit` (issue#2210)
     this.emit('showContent', name)
     this.events.emit('showContent', name)
-    if (toMaximize.includes(name)) {
-      setTimeout(_ => {
-        this.call('layout', 'maximiseSidePanel')
-      }, 500)
-    }
   }
 
   /**

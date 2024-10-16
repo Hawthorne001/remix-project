@@ -1,4 +1,5 @@
-import { ModalTypes } from '../types'
+import { GitHubUser } from '@remix-api'
+import { AppModalCancelTypes, ModalTypes } from '../types'
 
 export type ValidationResult = {
     valid: boolean,
@@ -16,13 +17,15 @@ export interface AppModal {
     okLabel: string | JSX.Element
     okFn?: (value?:any) => void
     cancelLabel?: string | JSX.Element
-    cancelFn?: () => void,
+    cancelFn?: (reason?: AppModalCancelTypes) => void,
     modalType?: ModalTypes,
+    modalParentClass?: string
     defaultValue?: string
     hideFn?: () => void,
     resolve?: (value?:any) => void,
     next?: () => void,
-    data?: any
+    data?: any,
+    preventBlur?: boolean
 }
 
 export interface AlertModal {
@@ -42,5 +45,9 @@ export interface forceChoiceModal {
   id: string
   title?: string,
   message: string | JSX.Element,
+}
+
+export interface AppState {
+    gitHubUser: GitHubUser
 }
 

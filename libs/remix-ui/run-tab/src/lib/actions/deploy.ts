@@ -6,10 +6,10 @@ import { SolcInput, SolcOutput } from "@openzeppelin/upgrades-core"
 // Used direct path to UpgradeableContract class to fix cyclic dependency error from @openzeppelin/upgrades-core library
 import { UpgradeableContract } from '../../../../../../node_modules/@openzeppelin/upgrades-core/dist/standalone'
 import { DeployMode, MainnetPrompt } from "../types"
-import { displayNotification, displayPopUp, fetchProxyDeploymentsSuccess, setDecodedResponse, updateInstancesBalance } from "./payload"
+import { displayNotification, fetchProxyDeploymentsSuccess, setDecodedResponse, updateInstancesBalance } from "./payload"
 import { addInstance } from "./actions"
 import { addressToString, logBuilder } from "@remix-ui/helper"
-import Web3 from "web3"
+import { Web3 } from "web3"
 
 declare global {
   interface Window {
@@ -256,7 +256,7 @@ export const loadAddress = (plugin: RunTab, dispatch: React.Dispatch<any>, contr
         const contractData = { name: '<at address>', abi, contract: { file: plugin.REACT_API.contracts.currentFile } } as ContractData
         return addInstance(dispatch, { contractData, address, name: '<at address>' })
       } else if (loadType === 'instance') {
-        if (!contract) return dispatch(displayPopUp('No compiled contracts found.'))
+        if (!contract) return plugin.call('notification', 'toast', 'No compiled contracts found.')
         const currentFile = plugin.REACT_API.contracts.currentFile
         const compiler = plugin.REACT_API.contracts.contractList[currentFile].find(item => item.alias === contract.name)
         const contractData = getSelectedContract(contract.name, compiler.compiler)
@@ -286,7 +286,6 @@ export const runTransactions = (
   plugin: RunTab,
   dispatch: React.Dispatch<any>,
   instanceIndex: number,
-  isPinnedContract: boolean,
   lookupOnly: boolean,
   funcABI: FuncABI,
   inputsValues: string,
@@ -323,7 +322,7 @@ export const runTransactions = (
     (returnValue) => {
       const response = txFormat.decodeResponse(returnValue, funcABI)
 
-      dispatch(setDecodedResponse(instanceIndex, response, funcIndex, isPinnedContract))
+      dispatch(setDecodedResponse(instanceIndex, response, funcIndex))
     },
     (network, tx, gasEstimation, continueTxExecution, cancelCb) => {
       confirmationHandler(plugin, dispatch, mainnetPrompt, network, tx, gasEstimation, continueTxExecution, cancelCb)
@@ -342,9 +341,8 @@ export const getFuncABIInputs = (plugin: RunTab, funcABI: FuncABI) => {
 }
 
 export const updateInstanceBalance = async (plugin: RunTab, dispatch: React.Dispatch<any>) => {
-  if (plugin.REACT_API?.instances?.instanceList?.length || plugin.REACT_API?.pinnedInstances?.instanceList?.length) {
-    let instances = plugin.REACT_API?.instances?.instanceList?.length ? plugin.REACT_API?.instances?.instanceList : []
-    instances = plugin.REACT_API?.pinnedInstances?.instanceList.length ? instances.concat(plugin.REACT_API.pinnedInstances.instanceList) : instances
+  if (plugin.REACT_API?.instances?.instanceList?.length) {
+    const instances = plugin.REACT_API?.instances?.instanceList?.length ? plugin.REACT_API?.instances?.instanceList : []
     for (const instance of instances) {
       const balInEth = await plugin.blockchain.getBalanceInEther(instance.address)
       instance.balance = balInEth

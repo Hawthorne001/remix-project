@@ -1,5 +1,6 @@
 // eslint-disable-next-line no-use-before-define
 import React, { Fragment, useEffect, useReducer, useState } from 'react'
+import semver from 'semver'
 import { FormattedMessage } from 'react-intl'
 import { ModalDialog } from '@remix-ui/modal-dialog'
 // eslint-disable-next-line no-unused-vars
@@ -31,6 +32,8 @@ import {
   setGasPriceStatus,
   setMaxFee,
   setMaxPriorityFee,
+  unpinPinnedInstance,
+  pinUnpinnedInstance,
   removeInstances,
   removeSingleInstance,
   getExecutionContext,
@@ -44,7 +47,8 @@ import {
   updateSelectedContract,
   syncContracts,
   isValidProxyAddress,
-  isValidProxyUpgrade
+  isValidProxyUpgrade,
+  addFile
 } from './actions'
 import './css/run-tab.css'
 import { PublishToStorage } from '@remix-ui/publish-to-storage'
@@ -74,18 +78,42 @@ export function RunTabUI(props: RunTabProps) {
     storage: null,
     contract: null
   })
-  runTabInitialState.selectExEnv = plugin.blockchain.getProvider()
-  const [runTab, dispatch] = useReducer(runTabReducer, runTabInitialState)
+  const initialState = props.initialState || runTabInitialState
+
+  initialState.selectExEnv = plugin.blockchain.getProvider()
+  const [runTab, dispatch] = useReducer(runTabReducer, initialState)
   const REACT_API = { runTab }
   const currentfile = plugin.config.get('currentFile')
+  const [solcVersion, setSolcVersion] = useState<{version: string, canReceive: boolean}>({ version: '', canReceive: true })
+
+  const getVersion = () => {
+    let version = '0.8.25'
+    try {
+      const regVersion = window.location.href.match(/soljson-v(.*)\+commit/g)
+      if (regVersion && regVersion[1]) version = regVersion[1]
+      if (semver.lt(version, '0.6.0')) {
+        setSolcVersion({ version: version, canReceive: false })
+      } else {
+        setSolcVersion({ version: version, canReceive: true })
+      }
+    } catch (e) {
+      setSolcVersion({ version, canReceive: true })
+      console.log(e)
+    }
+  }
 
   useEffect(() => {
-    initRunTab(plugin)(dispatch)
-    plugin.onInitDone()
+    if (!props.initialState) {
+      initRunTab(plugin, true)(dispatch)
+      plugin.onInitDone()
+    } else {
+      initRunTab(plugin, false)(dispatch)
+    }
   }, [plugin])
 
   useEffect(() => {
     plugin.onReady(runTab)
+    plugin.call('pluginStateLogger', 'logPluginState', 'udapp', runTab)
   }, [REACT_API])
 
   useEffect(() => {
@@ -253,6 +281,7 @@ export function RunTabUI(props: RunTabProps) {
       <div className="udapp_runTabView run-tab" id="runTabView" data-id="runTabView">
         <div className="list-group pb-4 list-group-flush">
           <SettingsUI
+            addFile={addFile}
             networkName={runTab.networkName}
             personalMode={runTab.personalMode}
             selectExEnv={runTab.selectExEnv}
@@ -299,6 +328,9 @@ export function RunTabUI(props: RunTabProps) {
             isValidProxyAddress={isValidProxyAddress}
             isValidProxyUpgrade={isValidProxyUpgrade}
             proxy={runTab.proxy}
+            solCompilerVersion={solcVersion}
+            setCompilerVersion={setSolcVersion}
+            getCompilerVersion={getVersion}
           />
           <RecorderUI
             plugin={plugin}
@@ -314,8 +346,9 @@ export function RunTabUI(props: RunTabProps) {
           <InstanceContainerUI
             plugin={plugin}
             instances={runTab.instances}
-            pinnedInstances={runTab.pinnedInstances}
             clearInstances={removeInstances}
+            unpinInstance={unpinPinnedInstance}
+            pinInstance={pinUnpinnedInstance}
             removeInstance={removeSingleInstance}
             getContext={getExecutionContext}
             gasEstimationPrompt={gasEstimationPrompt}
@@ -323,16 +356,20 @@ export function RunTabUI(props: RunTabProps) {
             mainnetPrompt={mainnetPrompt}
             runTransactions={executeTransactions}
             sendValue={runTab.sendValue}
+            solcVersion={solcVersion}
+            getVersion={getVersion}
             getFuncABIInputs={getFuncABIValues}
             exEnvironment={runTab.selectExEnv}
             editInstance={(instance) => {
-              plugin.call('dapp-draft', 'edit', {
+              const { metadata, abi, object } = instance.contractData;
+              plugin.call('quick-dapp', 'edit', {
                 address: instance.address,
-                abi: instance.contractData.abi,
+                abi: abi,
                 name: instance.name,
                 network: runTab.networkName,
-                devdoc: instance.contractData.object.devdoc,
-                methodIdentifiers: instance.contractData.object.evm.methodIdentifiers,
+                devdoc: object.devdoc,
+                methodIdentifiers: object.evm.methodIdentifiers,
+                solcVersion: JSON.parse(metadata).compiler.version,
               })
             }}
           />

@@ -41,7 +41,7 @@ export function RecorderUI(props: RecorderProps) {
             <FormattedMessage id="udapp.transactionsRecorded" />
           </label>
           <CustomTooltip
-            placement={'right'}
+            placement={'auto-end'}
             tooltipClasses="text-nowrap"
             tooltipId="recordedTransactionsCounttooltip"
             tooltipText={<FormattedMessage id="udapp.transactionsCountTooltip" />}
@@ -51,14 +51,13 @@ export function RecorderUI(props: RecorderProps) {
             </div>
           </CustomTooltip>
           <CustomTooltip
-            placement={'right'}
+            placement={'auto-end'}
             tooltipClasses="text-nowrap"
             tooltipId="recordedTransactionsWalkthroughtooltip"
             tooltipText={<FormattedMessage id="udapp.transactionsWalkthroughTooltip" />}
           >
             <i
-              style={{ fontSize: 'medium' }}
-              className={'ml-2 fal fa-info-circle align-self-center'}
+              className={'ml-2 fas fa-info align-self-center'}
               aria-hidden="true"
               onClick={() => startWalkthrough()}
               data-id="recorderStartWalkthrough"
@@ -77,7 +76,7 @@ export function RecorderUI(props: RecorderProps) {
         <div className="mb-1 mt-1 custom-control custom-checkbox mb-1" id='udappRecorderUseLatest'>
           <input ref={inputLive} type="checkbox" id="livemode-recorder" className="custom-control-input custom-select" name="input-livemode" />
           <CustomTooltip
-            placement={'right'}
+            placement={'auto-end'}
             tooltipClasses="text-wrap"
             tooltipId="tooltip-livemode-recorder"
             tooltipText={

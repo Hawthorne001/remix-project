@@ -1,14 +1,14 @@
-import {HighlightPosition, CompilationResult, RemixApi, customAction} from '@remixproject/plugin-api'
-import {Api, Status} from '@remixproject/plugin-utils'
-import {createClient} from '@remixproject/plugin-webview'
-import {PluginClient} from '@remixproject/plugin'
-import {Contract, compileContract} from './compiler'
-import {ExampleContract} from '../components/VyperResult'
+import { HighlightPosition, CompilationResult, RemixApi, customAction } from '@remixproject/plugin-api'
+import { Api, Status } from '@remixproject/plugin-utils'
+import { createClient } from '@remixproject/plugin-webview'
+import { PluginClient } from '@remixproject/plugin'
+import { Contract, compileContract } from './compiler'
+import { ExampleContract } from '../components/VyperResult'
 import EventEmitter from 'events'
-
+import { CustomRemixApi } from '@remix-api'
 
 export type VyperComplierAddress = 'https://vyper2.remixproject.org/' | 'http://localhost:8000/'
-export class RemixClient extends PluginClient {
+export class RemixClient extends PluginClient<any, CustomRemixApi> {
   private client = createClient<Api, Readonly<RemixApi>>(this)
   compilerUrl: VyperComplierAddress = 'https://vyper2.remixproject.org/'
   compilerOutput: any
@@ -50,7 +50,7 @@ export class RemixClient extends PluginClient {
   }
 
   /** Load Ballot contract example into the file manager */
-  async loadContract({name, address}: ExampleContract) {
+  async loadContract({ name, address }: ExampleContract) {
     try {
       const content = await this.client.call('contentImport', 'resolve', address)
       await this.client.call('fileManager', 'setFile', content.cleanUrl, content.content)
@@ -66,34 +66,44 @@ export class RemixClient extends PluginClient {
       return
     }
     try {
+      // TODO: remove! no formatting required since already handled on server
       const formattedMessage = `
         ${message}
         can you explain why this error occurred and how to fix it?
       `
-      await this.client.call('openaigpt' as any, 'message', formattedMessage)
+      await this.client.call('remixAI' as any, 'error_explaining', message)
     } catch (err) {
       console.error('unable to askGpt')
       console.error(err)
     }
   }
 
-  async cloneVyperRepo() {
+  async cloneVyperRepo(count?: number) {
+
     try {
       // @ts-ignore
-      this.call('notification', 'toast', 'cloning Snekmate Vyper repository...')
-      await this.call('manager', 'activatePlugin', 'dGitProvider')
+      this.call('notification', 'toast', 'cloning Vyper repository...')
       await this.call(
-        'dGitProvider',
+        'dgitApi',
         'clone',
-        {url: 'https://github.com/pcaversaccio/snekmate', token: null, branch: 'v0.0.5'},
-        // @ts-ignore
-        'snekmate'
+        { url: 'https://github.com/vyperlang/vyper', token: null, branch: 'master', singleBranch: false, workspaceName: 'vyper' },
       )
+
+      // await this.call(
+      //   'dgitApi',
+      //   'checkout',
+      //   {
+      //     ref:'v0.0.5',
+      //     force: true,
+      //     refresh: true,
+      //   }
+      // )
+
       this.call(
         // @ts-ignore
         'notification',
         'toast',
-        'Snekmate Vyper repository cloned, the workspace snekmate has been created.'
+        'Vyper repository cloned, the workspace Vyper has been created.'
       )
     } catch (e) {
       // @ts-ignore
