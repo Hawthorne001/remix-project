@@ -163,6 +163,9 @@
             "@remix-ui/solidity-uml-gen": [
               "libs/remix-ui/solidity-uml-gen/src/index.ts"
             ],
+            "@remix-ui/statusbar": [
+              "libs/remix-ui/statusbar/src/index.ts"
+            ],
             "@remix-project/ghaction-helper": [
               "libs/ghaction-helper/src/index.ts"
             ],
@@ -172,7 +175,22 @@
             "@remix-ui/xterm": [
               "libs/remix-ui/xterm/src/index.ts"
             ],
+            "@remix-ui/remix-ai": [
+              "libs/remix-ui/remix-ai/src/index.ts"
+            ],
 
+            "@remix/remix-ai-core": [
+              "libs/remix-ai-core/src/index.ts"
+            ],
+            "@remix-ui/git": [
+                "libs/remix-ui/git/src/index.ts"
+            ],
+            "@remix-api": [
+              "libs/remix-api/src/index.ts"
+            ],
+            "@remix-git": [
+              "libs/remix-git/"
+            ]
         }
     }
 }

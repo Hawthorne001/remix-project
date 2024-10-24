@@ -1,7 +1,7 @@
 'use strict'
 import { EventManager } from '../eventManager'
 import type { Transaction as InternalTransaction } from './txRunner'
-import Web3 from 'web3'
+import { Web3 } from 'web3'
 import { toBigInt, toHex } from 'web3-utils'
 
 export class TxRunnerWeb3 {
@@ -49,8 +49,6 @@ export class TxRunnerWeb3 {
           const receipt = await tryTillReceiptAvailable(resp, this.getWeb3())
           tx = await tryTillTxAvailable(resp, this.getWeb3())
           currentDateTime = new Date();
-          const end = currentDateTime.getTime() / 1000
-          console.log('tx duration', end - start)
           resolve({
             receipt,
             tx,
@@ -162,9 +160,10 @@ export class TxRunnerWeb3 {
           }, callback)
         })
         .catch(err => {
-          if (err && err.message.indexOf('Invalid JSON RPC response') !== -1) {
+          if (err && err.error && err.error.indexOf('Invalid JSON RPC response') !== -1) {
             // // @todo(#378) this should be removed when https://github.com/WalletConnect/walletconnect-monorepo/issues/334 is fixed
             callback(new Error('Gas estimation failed because of an unknown internal error. This may indicated that the transaction will fail.'))
+            return
           }
           err = network.name === 'VM' ? null : err // just send the tx if "VM"
           gasEstimationForceSend(err, () => {

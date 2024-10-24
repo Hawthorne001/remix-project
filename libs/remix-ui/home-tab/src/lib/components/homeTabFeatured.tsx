@@ -7,17 +7,26 @@ import 'react-multi-carousel/lib/styles.css'
 import * as releaseDetails from './../../../../../../releaseDetails.json'
 
 const _paq = (window._paq = window._paq || []) // eslint-disable-line
+export type HomeTabFeaturedProps = {
+  plugin: any
+  }
 
-function HomeTabFeatured() {
+function HomeTabFeatured(props:HomeTabFeaturedProps) {
   const themeFilter = useContext(ThemeContext)
-
+  const handleStartLearneth = async () => {
+    await props.plugin.appManager.activatePlugin(['LearnEth', 'solidityUnitTesting'])
+    props.plugin.verticalIcons.select('LearnEth')
+    _paq.push(['trackEvent', 'hometab', 'featuredSection', 'LearnEth'])
+  }
+  const handleStartRemixGuide = async () => {
+    _paq.push(['trackEvent', 'hometab', 'featuredSection', 'watchOnRemixGuide'])
+    await props.plugin.appManager.activatePlugin(['remixGuide'])
+    await props.plugin.call('tabs', 'focus', 'remixGuide')
+  }
   return (
-    <div className="pt-3 pl-2" id="hTFeaturedeSection">
-      <label style={{ fontSize: '1.2rem' }}>
-        <FormattedMessage id="home.featured" />
-      </label>
-      <div className="mb-2">
-        <div className="w-100 d-flex flex-column" style={{ height: '200px' }}>
+    <div className="pt-1 pl-2" id="hTFeaturedeSection">
+      <div className="mb-2 remix_ui-carousel-container">
+        <div className="w-100 d-flex flex-column rounded-3 remix_ui-carouselbox">
           <ThemeContext.Provider value={themeFilter}>
             <Carousel
               arrows={false}
@@ -34,16 +43,16 @@ function HomeTabFeatured() {
               centerMode={false}
               autoPlay={true}
               keyBoardControl={true}
-              containerClass="border w-full carousel-container"
+              containerClass="border w-full carousel-container d-flex align-items-center"
               sliderClass="h-100 justify-content-between"
               deviceType={'desktop'}
               itemClass=""
               autoPlaySpeed={10000}
               dotListClass="position-relative mt-2"
             >
-              <div className="mr-1 pr-1 d-flex">
+              <div className="mr-1 pr-1 d-flex align-items-center justify-content-center h-100">
                 <a href={releaseDetails.moreLink} target="__blank">
-                  <img src={'assets/img/remi_drums_whatsnew.webp'} style={{ flex: '1', height: '170px', maxWidth: '170px' }} alt=""></img>
+                  <img src={'assets/img/remi_drums_whatsnew.webp'} className="remixui_carouselImage" alt=""></img>
                 </a>
                 <div className="h6 w-50 p-2 pl-4 align-self-center" style={{ flex: '1' }}>
                   <h5>{releaseDetails.version} {releaseDetails.title}</h5>
@@ -65,31 +74,29 @@ function HomeTabFeatured() {
                   </a>
                 </div>
               </div>
-              <div className="mr-1 pr-1 d-flex">
-                <a href="https://remix-project.org" target="__blank">
-                  <img src={'assets/img/bgRemi_small.webp'} style={{ flex: '1', height: '170px', maxWidth: '170px' }} alt=""></img>
-                </a>
+              <div className="mr-1 pr-1 d-flex align-items-center justify-content-center h-100">
+                <button className='btn' onClick={()=>handleStartLearneth()}>
+                  <img src={'assets/img/remi-prof.webp'} className="remixui_carouselImage" alt=""></img>
+                </button>
                 <div className="h6 w-50 p-2 pl-4  align-self-center" style={{ flex: '1' }}>
                   <h5>
-                    <FormattedMessage id="home.jumpIntoWeb3" />
+                    <FormattedMessage id="home.learnEthPromoTitle" />
                   </h5>
                   <div style={{ fontSize: '0.8rem', lineHeight: '1.25rem' }} className="mb-3">
-                    <FormattedMessage id="home.jumpIntoWeb3Text" />
+                    <FormattedMessage id="home.learnEthPromoText" />
                   </div>
-                  <a
+                  <button
                     className="remixui_home_text btn-sm btn-secondary mt-2 text-decoration-none mb-3"
-                    onClick={() => _paq.push(['trackEvent', 'hometab', 'featuredSection', 'jumpIntoWeb3'])}
-                    target="__blank"
-                    href="https://remix-project.org/"
+                    onClick={()=>handleStartLearneth()}
                   >
-                    <FormattedMessage id="home.jumpIntoWeb3More" />
-                  </a>
+                    <FormattedMessage id="home.learnEthPromoButton" />
+                  </button>
                 </div>
               </div>
-              <div className="mr-1 pr-1 d-flex">
-                <a href="https://www.youtube.com/@EthereumRemix/videos" target="__blank">
-                  <img src={'/assets/img/YouTubeLogo.webp'} style={{ flex: '1', height: '170px', maxWidth: '170px' }} alt=""></img>
-                </a>
+              <div className="mr-1 pr-1 d-flex align-items-center justify-content-center h-100">
+                <button className="btn" onClick={() => handleStartRemixGuide()}>
+                  <img src={'assets/img/YouTubeLogo.webp'} className="remixui_carouselImage" alt=""></img>
+                </button>
                 <div className="h6 w-50 p-2 pl-4  align-self-center" style={{ flex: '1' }}>
                   <h5>
                     <FormattedMessage id="home.remixYouTube" />
@@ -100,38 +107,12 @@ function HomeTabFeatured() {
                   <div style={{ fontSize: '0.8rem' }} className="mb-3">
                     <FormattedMessage id="home.remixYouTubeText2" />
                   </div>
-                  <a
+                  <button
                     className="remixui_home_text btn-sm btn-secondary mt-2 text-decoration-none mb-3"
-                    onClick={() => _paq.push(['trackEvent', 'hometab', 'featuredSection', 'youTubeMore'])}
-                    target="__blank"
-                    href="https://www.youtube.com/@EthereumRemix/videos"
+                    onClick={() => handleStartRemixGuide()}
                   >
                     <FormattedMessage id="home.remixYouTubeMore" />
-                  </a>
-                </div>
-              </div>
-              <div className="mr-1 pr-1 d-flex">
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSd0WsJnKbeJo-BGrnf7WijxAdmE4PnC_Z4M0IApbBfHLHZdsQ/viewform" target="__blank">
-                  <img src={'/assets/img/remixRewardBetaTester_small.webp'} style={{ flex: '1', height: '170px', maxWidth: '170px' }} alt=""></img>
-                </a>
-                <div className="h6 w-50 p-2 pl-4  align-self-center" style={{ flex: '1' }}>
-                  <h5>
-                    <FormattedMessage id="home.betaTesting" />
-                  </h5>
-                  <p style={{ fontStyle: 'italic', fontSize: '1rem' }}>
-                    <FormattedMessage id="home.betaTestingText1" />
-                  </p>
-                  <div style={{ fontSize: '0.8rem' }} className="mb-3">
-                    <FormattedMessage id="home.betaTestingText2" />
-                  </div>
-                  <a
-                    className="remixui_home_text btn-sm btn-secondary mt-2 text-decoration-none mb-3"
-                    onClick={() => _paq.push(['trackEvent', 'hometab', 'featuredSection', 'betatesting'])}
-                    target="__blank"
-                    href="https://docs.google.com/forms/d/e/1FAIpQLSd0WsJnKbeJo-BGrnf7WijxAdmE4PnC_Z4M0IApbBfHLHZdsQ/viewform"
-                  >
-                    <FormattedMessage id="home.betaTestingMore" />
-                  </a>
+                  </button>
                 </div>
               </div>
             </Carousel>

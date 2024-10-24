@@ -25,6 +25,7 @@
   --text-background: #222336;
   --text-bg-mark: #8388b2;
   --custom-select: #35384c;
+  --runtab: #8A93B0;
   --body-bg: #222336;
   --breakpoint-xs: 0;
   --breakpoint-sm: 576px;
@@ -5081,6 +5082,7 @@ a.close.disabled {
 .modal-header .close {
   padding: 15px;
   margin: -1rem -1rem -1rem auto;
+  cursor: pointer;
 }
 .modal-title {
   margin-bottom: 0;
@@ -5662,7 +5664,7 @@ button.bg-success:hover {
   background-color: #27926b !important;
 }
 .bg-info {
-  background-color: #274458 !important;
+  background-color: #35576e !important;
 }
 a.bg-info:focus,
 a.bg-info:hover,

@@ -1,11 +1,12 @@
 /* eslint-disable @nrwl/nx/enforce-module-boundaries */
-import React from 'react'
+import React, { Dispatch } from 'react'
 import { customAction } from '@remixproject/plugin-api'
 import { fileDecoration } from '@remix-ui/file-decorators'
 import { RemixAppManager } from 'libs/remix-ui/plugin-manager/src/types'
 import { ViewPlugin } from '@remixproject/engine-web'
 import { appPlatformTypes } from '@remix-ui/app'
 import { Placement } from 'react-bootstrap/esm/Overlay'
+import { branch } from '@remix-api'
 
 export type action = { name: string, type?: Array<WorkspaceElement>, path?: string[], extension?: string[], pattern?: string[], id: string, multiselect: boolean, label: string, sticky?: boolean, group: number, platform?: appPlatformTypes }
 export interface JSONStandardInput {
@@ -51,8 +52,8 @@ export type WorkspaceMetadata = {
   name: string
   isGitRepo: boolean
   hasGitSubmodules?: boolean
-  branches?: {remote: any; name: string}[]
-  currentBranch?: string
+  branches?: branch[]
+  currentBranch?: branch
   isGist: string
 }
 
@@ -100,6 +101,7 @@ export interface FilePanelType extends ViewPlugin {
 export interface FileExplorerProps {
     name: string,
     menuItems?: string[],
+    canPaste: boolean
     contextMenuItems: MenuItems,
     removedContextMenuItems: MenuItems,
     files: { [x: string]: Record<string, FileType> },
@@ -126,6 +128,7 @@ export interface FileExplorerProps {
     dispatchCopyShareURL: (path:string) => Promise<void>,
     dispatchCopyFolder: (src: string, dest: string) => Promise<void>,
     dispatchRunScript: (path: string) => Promise<void>,
+    dispatchSignTypedData: (path: string) => Promise<void>,
     dispatchPublishToGist: (path?: string, type?: string) => Promise<void>,
     dispatchEmitContextMenuEvent: (cmd: customAction) => Promise<void>,
     dispatchHandleClickFile: (path: string, type: WorkspaceElement) => Promise<void>,
@@ -135,6 +138,8 @@ export interface FileExplorerProps {
     dispatchAddInputField:(path: string, type: 'file' | 'folder') => Promise<void>,
     dispatchHandleExpandPath: (paths: string[]) => Promise<void>,
     dispatchMoveFile: (src: string, dest: string) => Promise<void>,
+    dispatchMoveFiles: (src: string[], dest: string) => Promise<void>,
+    dispatchMoveFolders: (src: string[], dest: string) => Promise<void>,
     dispatchMoveFolder: (src: string, dest: string) => Promise<void>,
     handlePasteClick: (dest: string, destType: string) => void
     handleCopyClick: (path: string, type: WorkspaceElement) => void
@@ -153,6 +158,18 @@ export interface FileExplorerProps {
     createNewFolder:(parentFolder?: string) => Promise<void>
     renamePath:(path: string, type: string, isNew?: boolean) => void
     dragStatus: (status: boolean) => void
+    importFromIpfs: any
+    importFromHttps: any
+    handleGitInit?: () => Promise<void>
+    handleMultiCopies: any
+    feTarget: { key: string, type: 'file' | 'folder' }[]
+    setFeTarget: Dispatch<React.SetStateAction<{
+      key: string;
+      type: "file" | "folder";
+  }[]>>
+    publishManyFilesToGist: () => Promise<void>
+    hasCopied: boolean
+    setHasCopied: Dispatch<React.SetStateAction<boolean>>
 }
 
 export interface FileExplorerMenuProps {
@@ -163,6 +180,10 @@ export interface FileExplorerMenuProps {
   publishToGist: (path?: string) => void
   uploadFile: (target: EventTarget & HTMLInputElement) => void
   uploadFolder: (target: EventTarget & HTMLInputElement) => void
+  importFromIpfs: any
+  importFromHttps: any
+  connectToLocalFileSystem?: any
+  handleGitInit?: () => Promise<void>
   tooltipPlacement?: Placement
 }
 export interface FileExplorerContextMenuProps {
@@ -177,6 +198,7 @@ export interface FileExplorerContextMenuProps {
   pushChangesToGist?: (path?: string) => void
   publishFolderToGist?: (path?: string) => void
   publishFileToGist?: (path?: string) => void
+  signTypedData?: (path?: string) => void
   runScript?: (path: string) => void
   emit?: (cmd: customAction) => void
   pageX: number
@@ -192,10 +214,14 @@ export interface FileExplorerContextMenuProps {
   copyPath?: (path: string, type: string) => void
   generateUml?: (path: string) => Promise<void>
   uploadFile?: (target: EventTarget & HTMLInputElement) => void
+  publishManyFilesToGist: () => Promise<void>
 }
 
 export interface WorkSpaceState {
     ctrlKey: boolean
+    deleteKey?: boolean
+    F2Key?: boolean
+    cutShortcut: boolean
     newFileName: string
     actions: {
       id: string
@@ -244,14 +270,14 @@ export interface ActionPayloadTypes {
   SET_CURRENT_WORKSPACE: {
     name: string
     isGitRepo: boolean
-    branches?: {remote: string | undefined; name: string}[]
-    currentBranch?: string
+    branches?: branch[]
+    currentBranch?: branch
   },
   SET_WORKSPACES: {
     name: string
     isGitRepo: boolean
-    branches?: {remote: string | undefined; name: string}[]
-    currentBranch?: string
+    branches?: branch[]
+    currentBranch?: branch
   }[],
   SET_MODE: 'browser' | 'localhost',
   FETCH_DIRECTORY_REQUEST: undefined | null,
@@ -293,8 +319,8 @@ export interface ActionPayloadTypes {
   CREATE_WORKSPACE_SUCCESS: {
     name: string
     isGitRepo: boolean
-    branches?: { remote: string | undefined; name: string }[]
-    currentBranch?: string
+    branches?: branch[]
+    currentBranch?: branch
   },
   CREATE_WORKSPACE_ERROR: string,
   RENAME_WORKSPACE: { oldName: string; workspaceName: string },
@@ -317,8 +343,8 @@ export interface ActionPayloadTypes {
   CLONE_REPOSITORY_FAILED: undefined | null,
   FS_INITIALIZATION_COMPLETED: undefined | null,
   SET_FILE_DECORATION_SUCCESS: fileDecoration[],
-  SET_CURRENT_WORKSPACE_BRANCHES: { remote: string | undefined; name: string }[],
-  SET_CURRENT_WORKSPACE_CURRENT_BRANCH: string,
+  SET_CURRENT_WORKSPACE_BRANCHES: branch[],
+  SET_CURRENT_WORKSPACE_CURRENT_BRANCH: branch,
   SET_CURRENT_WORKSPACE_IS_GITREPO: boolean,
   SET_CURRENT_WORKSPACE_HAS_GIT_SUBMODULES: boolean,
   SET_GIT_CONFIG: {
@@ -338,3 +364,28 @@ export interface Action<T extends keyof ActionPayloadTypes> {
 export type Actions = {[A in keyof ActionPayloadTypes]: Action<A>}[keyof ActionPayloadTypes]
 
 export type WorkspaceElement = 'folder' | 'file' | 'workspace'
+
+export interface FlatTreeDropProps {
+  resetMultiselect: () => void
+  moveFolderSilently: (dest: string, src: string) => Promise<void>
+  moveFileSilently: (dest: string, src: string) => Promise<void>
+  setFilesSelected: Dispatch<React.SetStateAction<string[]>>
+  getFlatTreeItem: (path: string) => FileType
+  handleClickFolder: (path: string, type: string) => void
+  dragSource: FileType
+  children: React.ReactNode
+  expandPath: string[]
+  selectedItems: DragStructure[]
+  setSelectedItems: Dispatch<React.SetStateAction<DragStructure[]>>
+  warnMovingItems: (srcs: string[], dest: string) => Promise<void>
+}
+
+export type DragStructure = {
+  position: {
+    top: number
+    left: number
+  }
+  path: string
+  type: string
+  content: string
+}

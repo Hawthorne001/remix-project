@@ -1,7 +1,6 @@
 import { RemixApp } from '@remix-ui/app'
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
-import { createRoot } from 'react-dom/client'
 import * as packageJson from '../../../../../package.json'
 import { fileSystem, fileSystems } from '../files/fileSystem'
 import { indexedDBFileSystem } from '../files/filesystems/indexedDB'
@@ -10,6 +9,8 @@ import { fileSystemUtility, migrationTestData } from '../files/filesystems/fileS
 import './styles/preload.css'
 import isElectron from 'is-electron'
 const _paq = (window._paq = window._paq || [])
+
+_paq.push(['trackEvent', 'Preload', 'start'])
 
 export const Preload = (props: any) => {
   const [tip, setTip] = useState<string>('')

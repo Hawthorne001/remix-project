@@ -373,7 +373,7 @@ export const CompilerContainer = (props: CompilerContainerProps) => {
 
   // Load solc compiler version according to pragma in contract file
   const _setCompilerVersionFromPragma = (filename: string) => {
-    if (!solJsonBinData.selectorList) return
+    if (solJsonBinData && !solJsonBinData.selectorList) return
     api.readFile(filename).then((data) => {
       if (!data) return
       const pragmaArr = data.match(/(pragma solidity (.+?);)/g)
@@ -778,7 +778,7 @@ export const CompilerContainer = (props: CompilerContainerProps) => {
               tooltipClasses="text-nowrap"
               tooltipText={<FormattedMessage id="solidity.addACustomCompilerWithURL" />}
             >
-              <span className="far fa-plus border-0 p-0 ml-3" onClick={() => promptCompiler()}></span>
+              <span className="fas fa-plus border-0 p-0 ml-3" onClick={() => promptCompiler()}></span>
             </CustomTooltip>
             <CustomTooltip
               placement="bottom"
@@ -863,7 +863,7 @@ export const CompilerContainer = (props: CompilerContainerProps) => {
                     </span>
                   }
                 >
-                  <i style={{ fontSize: 'medium' }} className={'ml-2 fal fa-info-circle'} aria-hidden="true"></i>
+                  <i className={'ml-2 fas fa-info'} aria-hidden="true"></i>
                 </CustomTooltip>
               </a>
             </div>
@@ -892,7 +892,7 @@ export const CompilerContainer = (props: CompilerContainerProps) => {
                     </span>
                   }
                 >
-                  <i style={{ fontSize: 'medium' }} className={'ml-2 fal fa-info-circle'} aria-hidden="true"></i>
+                  <i style={{ fontSize: 'medium' }} className={'ml-2 fas fa-info'} aria-hidden="true"></i>
                 </CustomTooltip>
               </a>
             </div>
@@ -1127,7 +1127,7 @@ export const CompilerContainer = (props: CompilerContainerProps) => {
               disabled={(configFilePath === '' && state.useFileConfiguration) || disableCompileButton}
             >
               <CustomTooltip
-                placement="right"
+                placement={'auto-end'}
                 tooltipId="overlay-tooltip-compile-run"
                 tooltipText={
                   <div className="text-left">

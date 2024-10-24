@@ -1,19 +1,24 @@
 import { envChangeNotification } from "@remix-ui/helper"
 import { RunTab } from "../types/run-tab"
 import { setExecutionContext, setFinalContext, updateAccountBalances, fillAccountsList } from "./account"
-import { addExternalProvider, addInstance, addPinnedInstance, addNewProxyDeployment, removeExternalProvider, setNetworkNameFromProvider, setPinnedChainId } from "./actions"
-import { addDeployOption, clearAllInstances, clearAllPinnedInstances, clearRecorderCount, fetchContractListSuccess, resetProxyDeployments, resetUdapp, setCurrentContract, setCurrentFile, setLoadType, setRecorderCount, setRemixDActivated, setSendValue, fetchAccountsListSuccess } from "./payload"
+import { addExternalProvider, addInstance, addNewProxyDeployment, removeExternalProvider, setNetworkNameFromProvider, setPinnedChainId } from "./actions"
+import { addDeployOption, clearAllInstances, clearRecorderCount, fetchContractListSuccess, resetProxyDeployments, resetUdapp, setCurrentContract, setCurrentFile, setLoadType, setRecorderCount, setRemixDActivated, setSendValue, fetchAccountsListSuccess } from "./payload"
 import { updateInstanceBalance } from './deploy'
 import { CompilerAbstract } from '@remix-project/remix-solidity'
 import BN from 'bn.js'
-import Web3 from 'web3'
+import { Web3 } from 'web3'
 import { Plugin } from "@remixproject/engine"
 import { getNetworkProxyAddresses } from "./deploy"
 import { shortenAddress } from "@remix-ui/helper"
 
 const _paq = window._paq = window._paq || []
+let dispatch: React.Dispatch<any> = () => {}
 
-export const setupEvents = (plugin: RunTab, dispatch: React.Dispatch<any>) => {
+export const setEventsDispatch = (reducerDispatch: React.Dispatch<any>) => {
+  dispatch = reducerDispatch
+}
+
+export const setupEvents = (plugin: RunTab) => {
   // This maintains current network state and update the pinned contracts list,
   // only when there is a change in provider or in chain id for same provider
   // as 'networkStatus' is triggered in each 10 seconds
@@ -40,6 +45,11 @@ export const setupEvents = (plugin: RunTab, dispatch: React.Dispatch<any>) => {
     }
     setFinalContext(plugin, dispatch)
     fillAccountsList(plugin, dispatch)
+    // 'contextChanged' & 'networkStatus' both are triggered on workspace & network change
+    // There is chance that pinned contracts state is overrided by othe event
+    // We load pinned contracts for VM environment in this event
+    // and for other environments in 'networkStatus' event
+    if (context.startsWith('vm')) await loadPinnedContracts(plugin, dispatch, context)
   })
 
   plugin.blockchain.event.register('networkStatus', async ({ error, network }) => {
@@ -59,14 +69,16 @@ export const setupEvents = (plugin: RunTab, dispatch: React.Dispatch<any>) => {
     // Check if provider is changed or network is changed for same provider e.g; Metamask
     if (currentNetwork.provider !== networkProvider() || (!isVM && currentNetwork.chainId !== network.id)) {
       currentNetwork.provider = networkProvider()
-      if (!isVM) currentNetwork.chainId = network.id
-      await loadPinnedContracts(plugin, dispatch, pinnedChainId)
+      if (!isVM) {
+        currentNetwork.chainId = network.id
+        await loadPinnedContracts(plugin, dispatch, pinnedChainId)
+      }
     }
   })
 
-  plugin.blockchain.event.register('addProvider', provider => addExternalProvider(dispatch, provider))
+  plugin.on('blockchain', 'shouldAddProvidertoUdapp', (name, provider) => addExternalProvider(dispatch, provider))
 
-  plugin.blockchain.event.register('removeProvider', name => removeExternalProvider(dispatch, name))
+  plugin.on('blockchain', 'shouldRemoveProviderFromUdapp', (name, provider) => removeExternalProvider(dispatch, name))
 
   plugin.blockchain.events.on('newProxyDeployment', (address, date, contractName) => addNewProxyDeployment(dispatch, address, date, contractName))
 
@@ -95,16 +107,8 @@ export const setupEvents = (plugin: RunTab, dispatch: React.Dispatch<any>) => {
     dispatch(clearAllInstances())
   })
 
-  plugin.on('udapp', 'clearAllPinnedInstancesReducer', () => {
-    dispatch(clearAllPinnedInstances())
-  })
-
   plugin.on('udapp', 'addInstanceReducer', (address, abi, name, contractData?) => {
     addInstance(dispatch, { contractData, abi, address, name })
-  })
-
-  plugin.on('udapp', 'addPinnedInstanceReducer', (address, abi, name, pinnedAt, filePath) => {
-    addPinnedInstance(dispatch, { abi, address, name, pinnedAt, filePath })
   })
 
   plugin.on('filePanel', 'setWorkspace', async () => {
@@ -177,7 +181,7 @@ export const setupEvents = (plugin: RunTab, dispatch: React.Dispatch<any>) => {
 }
 
 const loadPinnedContracts = async (plugin, dispatch, dirName) => {
-  await plugin.call('udapp', 'clearAllPinnedInstances')
+  await plugin.call('udapp', 'clearAllInstances')
   const isPinnedAvailable = await plugin.call('fileManager', 'exists', `.deploys/pinned-contracts/${dirName}`)
   if (isPinnedAvailable) {
     try {
@@ -186,7 +190,8 @@ const loadPinnedContracts = async (plugin, dispatch, dirName) => {
       for (const file of filePaths) {
         const pinnedContract = await plugin.call('fileManager', 'readFile', file)
         const pinnedContractObj = JSON.parse(pinnedContract)
-        if (pinnedContractObj) addPinnedInstance(dispatch, pinnedContractObj)
+        pinnedContractObj.isPinned = true
+        if (pinnedContractObj) addInstance(dispatch, pinnedContractObj)
       }
     } catch (err) {
       console.log(err)
