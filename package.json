@@ -193,7 +193,7 @@
     "rustbn-wasm": "^0.4.0",
     "signale": "^1.4.0",
     "snarkjs": "^0.7.0",
-    "sol2uml": "^2.4.3",
+    "sol2uml": "^2.5.22",
     "string-similarity": "^4.0.4",
     "svg2pdf.js": "^2.2.1",
     "text-encoding": "^0.7.0",
