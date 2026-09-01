@@ -942,8 +942,8 @@ IMPORTANT: In this turn, only ask STEP 1 and then STOP. After my next reply, con
                                         const response = decoded[numKey]
                                         return numKey === actualIndex
                                           ? Object.keys(response || {}).map((innerkey) =>
-                                              renderData((decoded[numKey] || {})[innerkey], response, innerkey, innerkey)
-                                            )
+                                            renderData((decoded[numKey] || {})[innerkey], response, innerkey, innerkey)
+                                          )
                                           : null
                                       })}
                                     </TreeView>
@@ -1017,7 +1017,7 @@ IMPORTANT: In this turn, only ask STEP 1 and then STOP. After my next reply, con
                   </div>
                 )}
               </div>
-<div className="border-top mb-3"></div>
+              <div className="border-top mb-3"></div>
 
               {(functionABIs.some((fn: FuncABI) => fn.stateMutability !== 'view' && fn.stateMutability !== 'pure') || showLowLevel) && (
                 <div className="mb-3">
