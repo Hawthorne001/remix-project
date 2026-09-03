@@ -825,6 +825,9 @@ export function RemixUiTopbar() {
     }
   ]
 
+  const modeButtons = panelControls.filter(c => c.id === 'aiReviewModeBtn' || c.id === 'codeModeBtn')
+  const otherButtons = panelControls.filter(c => c.id !== 'aiReviewModeBtn' && c.id !== 'codeModeBtn')
+
   return (
     <section
       ref={sectionRef}
@@ -919,6 +922,31 @@ export function RemixUiTopbar() {
               onMigrateToCloud={() => cloudStore.emit('showMigrationDialog')}
               cloneGitRepository={showCloneModal}
             />
+            {modeButtons.length > 0 && (
+              <div
+                key="mode-toggle-group"
+                className="ai-mode-toggle-group d-flex ms-2"
+                data-active={aiReviewModeActive ? 'ai' : 'code'}
+              >
+                <div className="ai-mode-toggle-thumb" />
+                {modeButtons.map(ctrl => (
+                  <CustomTooltip key={ctrl.id} placement="bottom-start" tooltipText={ctrl.tooltip}>
+                    <div
+                      className={`ai-mode-btn${ctrl.isActive ? ' active' : ''}`}
+                      data-id={ctrl.id}
+                      onClick={ctrl.onClick}
+                    >
+                      {ctrl.id === 'aiReviewModeBtn' ? (
+                        <span className="ai-mode-btn-icon" aria-hidden="true" />
+                      ) : (
+                        <i className={`${ctrl.iconClass} fs-6`} />
+                      )}
+                      <span className="ai-mode-btn-label">{ctrl.label}</span>
+                    </div>
+                  </CustomTooltip>
+                ))}
+              </div>
+            )}
             <div
               ref={panelControlRef}
               data-id="panel-control"
@@ -940,7 +968,7 @@ export function RemixUiTopbar() {
                     </CustomTooltip>
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    {panelControls.map(ctrl => (
+                    {otherButtons.map(ctrl => (
                       <Dropdown.Item key={ctrl.id} onClick={ctrl.onClick} data-id={`${ctrl.id}-menuItem`}>
                         <i className={`${ctrl.iconClass} me-2`} />
                         {ctrl.label}
@@ -949,39 +977,17 @@ export function RemixUiTopbar() {
                   </Dropdown.Menu>
                 </Dropdown>
               ) : (
-                (() => {
-                  const modeButtons = panelControls.filter(c => c.id === 'aiReviewModeBtn' || c.id === 'codeModeBtn')
-                  const otherButtons = panelControls.filter(c => c.id !== 'aiReviewModeBtn' && c.id !== 'codeModeBtn')
-                  return [
-                    ...otherButtons.map(ctrl => (
-                      <CustomTooltip key={ctrl.id} placement="bottom-start" tooltipText={ctrl.tooltip}>
-                        <div
-                          className={`panel-control-btn${ctrl.isActive ? ' active' : ''}`}
-                          data-id={ctrl.id}
-                          onClick={ctrl.onClick}
-                        >
-                          <i className={`${ctrl.iconClass} fs-6`} />
-                        </div>
-                      </CustomTooltip>
-                    )),
-                    modeButtons.length > 0 && (
-                      <div key="mode-toggle-group" className="ai-mode-toggle-group d-flex">
-                        {modeButtons.map(ctrl => (
-                          <CustomTooltip key={ctrl.id} placement="bottom-start" tooltipText={ctrl.tooltip}>
-                            <div
-                              className={`ai-mode-btn${ctrl.isActive ? ' active' : ''}`}
-                              data-id={ctrl.id}
-                              onClick={ctrl.onClick}
-                            >
-                              <i className={`${ctrl.iconClass} fs-6`} />
-                              <span className="ai-mode-btn-label">{ctrl.label}</span>
-                            </div>
-                          </CustomTooltip>
-                        ))}
-                      </div>
-                    )
-                  ]
-                })()
+                otherButtons.map(ctrl => (
+                  <CustomTooltip key={ctrl.id} placement="bottom-start" tooltipText={ctrl.tooltip}>
+                    <div
+                      className={`panel-control-btn${ctrl.isActive ? ' active' : ''}`}
+                      data-id={ctrl.id}
+                      onClick={ctrl.onClick}
+                    >
+                      <i className={`${ctrl.iconClass} fs-6`} />
+                    </div>
+                  </CustomTooltip>
+                ))
               )}
             </div>
           </div>
